@@ -29,7 +29,7 @@ namespace ReadEmails
         static void Main(string[] args)
         {
             UserCredential credential;
-
+            
             using (var stream =
                 new FileStream("credentials.json", FileMode.Open, FileAccess.Read))
             {

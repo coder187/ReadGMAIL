@@ -5,6 +5,9 @@
 
 # Custom Rules
 credentials.json
+ReadEmails/credentials.json
+ReadEmails/credentials.json.org
+
 token.json
 
 # User-specific files
