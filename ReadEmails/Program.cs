@@ -25,7 +25,7 @@ namespace ReadEmails
         // If modifying these scopes, delete your previously saved credentials
         // at ~/.credentials/gmail-dotnet-quickstart.json
         static string[] Scopes = { GmailService.Scope.GmailReadonly };
-        static string ApplicationName = "Gmail API .NET Quickstart";
+        static string ApplicationName = "Gmail API .NET Read Form Enquiry Data";
         static void Main(string[] args)
         {
             UserCredential credential;
