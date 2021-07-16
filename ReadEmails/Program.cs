@@ -100,15 +100,19 @@ namespace ReadEmails
             request.IncludeSpamTrash = false;
             request.LabelIds= "INBOX";
             request.MaxResults = 1;
-            //request.Q = query;
-            
+            string query = "";
+            query = "label:unread";
+            query = query + " " + "subject:({quickbus.ie fastbus.ie})";
+
+            request.Q = query;
+
             ListMessagesResponse response = request.Execute();
             if (response !=null && response.Messages !=null) {
                 foreach (Message m  in response.Messages) {
                     Message ThisEmail = service.Users.Messages.Get("me", m.Id).Execute();
                     if (ThisEmail != null) {
-                        Console.WriteLine(ThisEmail.Snippet);
-                        Console.WriteLine(ThisEmail.Id);
+                        //Console.WriteLine(ThisEmail.Snippet);
+                        //Console.WriteLine(ThisEmail.Id);
 
                         
 
@@ -146,10 +150,10 @@ namespace ReadEmails
                                     if ((p.MimeType == "text/plain"))
                                         
                                     {
-                                        Console.WriteLine(p.MimeType);
+                                        //Console.WriteLine(p.MimeType);
                                         byte[] data = FromBase64ForUrlString(p.Body.Data);
                                         decodedString = System.Text.Encoding.UTF8.GetString(data);
-                                        Console.WriteLine(decodedString);
+                                        //Console.WriteLine(decodedString);
 
 
                                     }
@@ -160,8 +164,13 @@ namespace ReadEmails
                             }
                             
                         }
-                        Console.ForegroundColor = ConsoleColor.Yellow;
-                        Console.WriteLine(date + "\r\n" + from + "\r\n" + subject + "\r\n" + messageID + "\r\n" + decodedString);
+                        //Console.ForegroundColor = ConsoleColor.Yellow;
+                        //Console.WriteLine(date + "\r\n" + from + "\r\n" + subject + "\r\n" + messageID + "\r\n");
+                        //Console.ForegroundColor = ConsoleColor.Green;
+                        Console.WriteLine(decodedString);
+                        Enquiry ThisEmailEnquiry = ReadEnquiry(decodedString);
+                        WriteEnquiry(ThisEmailEnquiry);
+                        //Console.ForegroundColor = ConsoleColor.Gray;
                     }
 
                 }
@@ -202,6 +211,7 @@ namespace ReadEmails
             Console.Read();
 
 
+
             byte[] FromBase64ForUrlString(string base64ForUrlInput)
                 {
                     int padChars = (base64ForUrlInput.Length % 4) == 0 ? 0 : (4 - (base64ForUrlInput.Length % 4));
@@ -217,9 +227,96 @@ namespace ReadEmails
                 var inputBytes = System.Text.Encoding.UTF8.GetBytes(input);
                 return Convert.ToBase64String(inputBytes).Replace("+", "-").Replace("/", "_").Replace("=", "");
             }
-        }
-        
-    }
 
-    
+            Enquiry ReadEnquiry(string s) {
+                
+
+                int pFrom = s.IndexOf(".ie") + ".ie".Length;
+                int pTo = s.LastIndexOf("Map");
+
+                s = s.Substring(pFrom, pTo - pFrom).Trim();
+                
+                Console.WriteLine(s);
+                
+                Enquiry e = new Enquiry();
+
+                string[] stringSeparators = new string[] { "\r\n" };
+                string[] EnquiryItems = s.Split(stringSeparators,StringSplitOptions.None);
+                foreach (var EnquiryItem in EnquiryItems)
+                {
+                    Console.WriteLine(EnquiryItem.Trim());
+
+                    
+                    int i = Array.IndexOf(EnquiryItems, "Name");
+                    string[] thisLine = EnquiryItem.Split(':');
+                    e.Name = thisLine[1];
+
+                    i = Array.IndexOf(EnquiryItems, "Email");
+                    thisLine = EnquiryItem.Split(':');
+                    e.Email = thisLine[1];
+
+                    i = Array.IndexOf(EnquiryItems, "Phone");
+                    thisLine = EnquiryItem.Split(':');
+                    e.Phone = thisLine[1];
+
+                    i = Array.IndexOf(EnquiryItems, "Pickup");
+                    thisLine = EnquiryItem.Split(':');
+                    e.Pickup = thisLine[1];
+
+
+
+
+
+
+                //    switch (EnquiryItem.Trim())
+                //    {
+                //        case "Name":
+                //            Console.WriteLine(EnquiryItem.IndexOf(EnquiryItem));
+
+                //            //e.Name = EnquiryItem.i.Trim();
+                //            break;
+                //        case "Phone":
+                //            e.Phone = EnquiryItem.Trim();
+                //            break;
+                //        case "Email":
+                //            e.Email = EnquiryItem.Trim();
+                //            break;
+                //        case "Bus":
+                //            e.Bus = EnquiryItem.Trim();
+                //            break;
+                //    }
+                    
+                //
+                }
+                return e;
+            }
+
+            void WriteEnquiry(Enquiry e) {
+                Console.WriteLine("//////////////////////////////////////////////////");
+                Console.WriteLine(e.Name);
+                Console.WriteLine(e.Bus);
+                Console.WriteLine(e.Phone);
+                Console.WriteLine(e.Email);
+                Console.WriteLine("//////////////////////////////////////////////////");
+            }
+            
+            //string GetValue(string[] EnqItems, string[] ThisItem, string sValue, Enquiry e) {
+            //    int i = Array.IndexOf(EnqItems, sValue);
+            //    string[] thisLine = ThisItem.Split(':');
+            //    e.Name = thisLine[1];
+            //}
+        }
+    }
+}
+
+class Enquiry
+{
+    public string Name { get; set; }
+    public string Email { get; set; }
+    public string Phone { get; set; }
+    public string Bus { get; set; }
+    public string Pickup { get; set; }
+    public DateTime PickDate { get; set; }
+    public string Dest { get; set; }
+    public bool Return { get; set; }
 }
