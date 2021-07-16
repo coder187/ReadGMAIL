@@ -52,25 +52,156 @@ namespace ReadEmails
                 ApplicationName = ApplicationName,
             });
 
+            //SAMPLE CODE
             // Define parameters of request.
-            UsersResource.LabelsResource.ListRequest request = service.Users.Labels.List("me");
+            //UsersResource.LabelsResource.ListRequest request = service.Users.Labels.List("me");
+            //UsersResource.MessagesResource.ListRequest request2 = service.Users.Messages.List("me");
 
-            // List labels.
-            IList<Label> labels = request.Execute().Labels;
-            Console.WriteLine("Labels:");
-            if (labels != null && labels.Count > 0)
-            {
-                foreach (var labelItem in labels)
-                {
-                    Console.WriteLine("{0}", labelItem.Name);
+            //// List labels.
+            //IList<Label> labels = request.Execute().Labels;
+            //Console.WriteLine("Labels:");
+            //if (labels != null && labels.Count > 0)
+            //{
+            //    foreach (var labelItem in labels)
+            //    {
+            //        Console.WriteLine("{0}", labelItem.Name);
+            //    }
+            //}
+            //else
+            //{
+            //    Console.WriteLine("No labels found.");
+            //}
+            ////Console.Read();
+
+            //// List emails.
+            //IList<Message> emails = request2.Execute().;
+            //long emailSizeEst = (long)request2.Execute().ResultSizeEstimate;
+
+            //Console.WriteLine("Emails:");
+            //Console.WriteLine("Email Size:" + emailSizeEst);
+
+            //if (emails != null && emails.Count > 0)
+            //{
+            //    foreach (var emailItem in emails)
+            //    {
+            //        Console.WriteLine("{0}", emailItem.Id);
+            //    }
+            //}
+            //else
+            //{
+            //    Console.WriteLine("No emails found.");
+            //}
+            
+
+            long pageCount = 0;
+            List<Message> result = new List<Message>();
+            UsersResource.MessagesResource.ListRequest request = service.Users.Messages.List("me");
+            request.IncludeSpamTrash = false;
+            request.LabelIds= "INBOX";
+            request.MaxResults = 10;
+            //request.Q = query;
+            
+            ListMessagesResponse response = request.Execute();
+            if (response !=null && response.Messages !=null) {
+                foreach (Message m  in response.Messages) {
+                    Message ThisEmail = service.Users.Messages.Get("me", m.Id).Execute();
+                    if (ThisEmail != null) {
+                        String from = "";
+                        String date = "";
+                        String subject = "";
+                        foreach (MessagePartHeader headerpart in ThisEmail.Payload.Headers)
+                        {
+                            if (headerpart.Name == "Date")
+                            {
+                                date = headerpart.Value;
+                            }
+                            else if (headerpart.Name == "From")
+                            {
+                                from = headerpart.Value;
+                            }
+                            else if (headerpart.Name == "Subject")
+                            {
+                                subject = headerpart.Value;
+                            }
+                            
+                            if (date != "" && from != "")
+                            {
+                                foreach (MessagePart p in ThisEmail.Payload.Parts)
+                                {
+                                    if (p.MimeType == "text/html")
+                                    {
+                                        byte[] data = FromBase64ForUrlString(p.Body.Data);
+                                        string decodedString = System.Text.Encoding.UTF8.GetString(data);
+                                        Console.WriteLine(decodedString);
+                                        
+
+                                    }
+                                    else {
+                                        Console.WriteLine("");
+                                    }
+                                    Console.WriteLine("############################################################");
+                                }
+
+                            }
+                        }
+                    }
+
                 }
             }
-            else
-            {
-                Console.WriteLine("No labels found.");
-            }
+            //do
+            //{
+            //  try
+            //{
+
+
+            //result.AddRange(response.Messages);
+            //        pageCount++;
+            //        Console.WriteLine(pageCount);
+            ////request.PageToken = response.NextPageToken;
+            ////}
+            ////catch (Exception e)
+            // {
+            //Console.WriteLine("An error occurred: " + e.Message);
+            // }
+
+            //} while (!String.IsNullOrEmpty(request.PageToken));
+
+            //Console.WriteLine("Found " + pageCount + " messages.");
+
+            //int i = 1;
+            //foreach (Message m in result)
+            //{
+            //    Console.WriteLine(m.Id);
+
+            //    Console.WriteLine(Base64UrlEncode(m.Raw));
+
+            //    Console.WriteLine(i + "###############################################################");
+            //    i++;
+            //}
+            
+                
+               
             Console.Read();
 
+
+            byte[] FromBase64ForUrlString(string base64ForUrlInput)
+                {
+                    int padChars = (base64ForUrlInput.Length % 4) == 0 ? 0 : (4 - (base64ForUrlInput.Length % 4));
+                    System.Text.StringBuilder thisresult = new System.Text.StringBuilder(base64ForUrlInput, base64ForUrlInput.Length + padChars);
+                    thisresult.Append(String.Empty.PadRight(padChars, '='));
+                    thisresult.Replace('-', '+');
+                    thisresult.Replace('_', '/');
+                    return Convert.FromBase64String(thisresult.ToString());
+                }
+                
+            string Base64UrlEncode(string input)
+            {
+                var inputBytes = System.Text.Encoding.UTF8.GetBytes(input);
+                return Convert.ToBase64String(inputBytes).Replace("+", "-").Replace("/", "_").Replace("=", "");
+            }
         }
+        
     }
+
+    
 }
