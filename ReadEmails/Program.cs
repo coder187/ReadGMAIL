@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
+using System.Text;
 
 namespace ReadEmails
 {
@@ -98,7 +99,7 @@ namespace ReadEmails
             UsersResource.MessagesResource.ListRequest request = service.Users.Messages.List("me");
             request.IncludeSpamTrash = false;
             request.LabelIds= "INBOX";
-            request.MaxResults = 10;
+            request.MaxResults = 1;
             //request.Q = query;
             
             ListMessagesResponse response = request.Execute();
@@ -106,9 +107,17 @@ namespace ReadEmails
                 foreach (Message m  in response.Messages) {
                     Message ThisEmail = service.Users.Messages.Get("me", m.Id).Execute();
                     if (ThisEmail != null) {
+                        Console.WriteLine(ThisEmail.Snippet);
+                        Console.WriteLine(ThisEmail.Id);
+
+                        
+
                         String from = "";
                         String date = "";
                         String subject = "";
+                        String messageID = "";
+                        String decodedString = "";
+
                         foreach (MessagePartHeader headerpart in ThisEmail.Payload.Headers)
                         {
                             if (headerpart.Name == "Date")
@@ -122,28 +131,37 @@ namespace ReadEmails
                             else if (headerpart.Name == "Subject")
                             {
                                 subject = headerpart.Value;
+                            } else if (headerpart.Name == "Message-ID") 
+                            {
+                                messageID = headerpart.Value;
                             }
+
                             
                             if (date != "" && from != "")
                             {
                                 foreach (MessagePart p in ThisEmail.Payload.Parts)
                                 {
-                                    if (p.MimeType == "text/html")
-                                    {
-                                        byte[] data = FromBase64ForUrlString(p.Body.Data);
-                                        string decodedString = System.Text.Encoding.UTF8.GetString(data);
-                                        Console.WriteLine(decodedString);
+                                   //Console.WriteLine(p.MimeType);
+                                    
+                                    if ((p.MimeType == "text/plain"))
                                         
+                                    {
+                                        Console.WriteLine(p.MimeType);
+                                        byte[] data = FromBase64ForUrlString(p.Body.Data);
+                                        decodedString = System.Text.Encoding.UTF8.GetString(data);
+                                        Console.WriteLine(decodedString);
+
 
                                     }
-                                    else {
-                                        Console.WriteLine("");
-                                    }
-                                    Console.WriteLine("############################################################");
+                                    
+                                    //Console.WriteLine("############################################################");
                                 }
 
                             }
+                            
                         }
+                        Console.ForegroundColor = ConsoleColor.Yellow;
+                        Console.WriteLine(date + "\r\n" + from + "\r\n" + subject + "\r\n" + messageID + "\r\n" + decodedString);
                     }
 
                 }
