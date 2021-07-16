@@ -99,12 +99,13 @@ namespace ReadEmails
             UsersResource.MessagesResource.ListRequest request = service.Users.Messages.List("me");
             request.IncludeSpamTrash = false;
             request.LabelIds= "INBOX";
-            request.MaxResults = 1;
+            request.MaxResults = 10;
             string query = "";
             query = "label:unread";
             query = query + " " + "subject:({quickbus.ie fastbus.ie})";
 
             request.Q = query;
+            List<Enquiry> Enquiries = new List<Enquiry>();
 
             ListMessagesResponse response = request.Execute();
             if (response !=null && response.Messages !=null) {
@@ -164,50 +165,17 @@ namespace ReadEmails
                             }
                             
                         }
-                        //Console.ForegroundColor = ConsoleColor.Yellow;
-                        //Console.WriteLine(date + "\r\n" + from + "\r\n" + subject + "\r\n" + messageID + "\r\n");
-                        //Console.ForegroundColor = ConsoleColor.Green;
-                        Console.WriteLine(decodedString);
+                        //Console.WriteLine(decodedString);
                         Enquiry ThisEmailEnquiry = ReadEnquiry(decodedString);
-                        WriteEnquiry(ThisEmailEnquiry);
-                        //Console.ForegroundColor = ConsoleColor.Gray;
+                        Enquiries.Add(ThisEmailEnquiry);
                     }
 
                 }
             }
-            //do
-            //{
-            //  try
-            //{
 
-
-            //result.AddRange(response.Messages);
-            //        pageCount++;
-            //        Console.WriteLine(pageCount);
-            ////request.PageToken = response.NextPageToken;
-            ////}
-            ////catch (Exception e)
-            // {
-            //Console.WriteLine("An error occurred: " + e.Message);
-            // }
-
-            //} while (!String.IsNullOrEmpty(request.PageToken));
-
-            //Console.WriteLine("Found " + pageCount + " messages.");
-
-            //int i = 1;
-            //foreach (Message m in result)
-            //{
-            //    Console.WriteLine(m.Id);
-
-            //    Console.WriteLine(Base64UrlEncode(m.Raw));
-
-            //    Console.WriteLine(i + "###############################################################");
-            //    i++;
-            //}
-            
-                
-               
+            foreach (Enquiry e in Enquiries){
+                WriteEnquiry(e);
+            }
             Console.Read();
 
 
@@ -228,83 +196,71 @@ namespace ReadEmails
                 return Convert.ToBase64String(inputBytes).Replace("+", "-").Replace("/", "_").Replace("=", "");
             }
 
-            Enquiry ReadEnquiry(string s) {
-                
+            Enquiry ReadEnquiry(string s)
+            {
 
+                
+                //substring between ie and Map
                 int pFrom = s.IndexOf(".ie") + ".ie".Length;
                 int pTo = s.LastIndexOf("Map");
-
                 s = s.Substring(pFrom, pTo - pFrom).Trim();
+
+                //Console.WriteLine(s);
                 
-                Console.WriteLine(s);
-                
+                string[] stringSeparators = new string[] { "\r\n" };
+                string[] EnquiryItems = s.Split(stringSeparators, StringSplitOptions.None); //each line as an element in the array "Name: Jean-Luc Picard"
+
+                //Parse string to Enquiry Object
                 Enquiry e = new Enquiry();
 
-                string[] stringSeparators = new string[] { "\r\n" };
-                string[] EnquiryItems = s.Split(stringSeparators,StringSplitOptions.None);
                 foreach (var EnquiryItem in EnquiryItems)
                 {
-                    Console.WriteLine(EnquiryItem.Trim());
-
-                    
-                    int i = Array.IndexOf(EnquiryItems, "Name");
-                    string[] thisLine = EnquiryItem.Split(':');
-                    e.Name = thisLine[1];
-
-                    i = Array.IndexOf(EnquiryItems, "Email");
-                    thisLine = EnquiryItem.Split(':');
-                    e.Email = thisLine[1];
-
-                    i = Array.IndexOf(EnquiryItems, "Phone");
-                    thisLine = EnquiryItem.Split(':');
-                    e.Phone = thisLine[1];
-
-                    i = Array.IndexOf(EnquiryItems, "Pickup");
-                    thisLine = EnquiryItem.Split(':');
-                    e.Pickup = thisLine[1];
-
-
-
-
-
-
-                //    switch (EnquiryItem.Trim())
-                //    {
-                //        case "Name":
-                //            Console.WriteLine(EnquiryItem.IndexOf(EnquiryItem));
-
-                //            //e.Name = EnquiryItem.i.Trim();
-                //            break;
-                //        case "Phone":
-                //            e.Phone = EnquiryItem.Trim();
-                //            break;
-                //        case "Email":
-                //            e.Email = EnquiryItem.Trim();
-                //            break;
-                //        case "Bus":
-                //            e.Bus = EnquiryItem.Trim();
-                //            break;
-                //    }
-                    
-                //
+                   
+                    string[] NameValues = EnquiryItem.Split(':');
+  
+                    switch (NameValues[0])
+                    {
+                        case "Name":
+                           e.Name = NameValues[1].Trim();
+                            break;
+                        case "Phone":
+                            e.Phone = NameValues[1].Trim(); ;
+                            break;
+                        case "Email":
+                            e.Email = NameValues[1].Trim(); ;
+                            break;
+                        case "Bus":
+                            e.Bus = NameValues[1].Trim();
+                            break;
+                        case "Pickup":
+                            e.Pickup = NameValues[1].Trim();
+                            break;
+                        case "Drop Off":
+                            e.Dest = NameValues[1].Trim();
+                            break;
+                        case "Return Trip":
+                            e.Return = NameValues[1].Trim();
+                            break;
+                        case "Pick-up Date":
+                            e.PickDate = NameValues[1].Trim();
+                            break;
+                    }
                 }
                 return e;
             }
-
+               
             void WriteEnquiry(Enquiry e) {
                 Console.WriteLine("//////////////////////////////////////////////////");
                 Console.WriteLine(e.Name);
-                Console.WriteLine(e.Bus);
                 Console.WriteLine(e.Phone);
                 Console.WriteLine(e.Email);
+                Console.WriteLine(e.Bus);
+                Console.WriteLine(e.Pickup);
+                Console.WriteLine(e.Dest);
+                Console.WriteLine(e.PickDate);
+                Console.WriteLine(e.Return);
                 Console.WriteLine("//////////////////////////////////////////////////");
             }
-            
-            //string GetValue(string[] EnqItems, string[] ThisItem, string sValue, Enquiry e) {
-            //    int i = Array.IndexOf(EnqItems, sValue);
-            //    string[] thisLine = ThisItem.Split(':');
-            //    e.Name = thisLine[1];
-            //}
         }
     }
 }
@@ -316,7 +272,7 @@ class Enquiry
     public string Phone { get; set; }
     public string Bus { get; set; }
     public string Pickup { get; set; }
-    public DateTime PickDate { get; set; }
+    public string PickDate { get; set; }
     public string Dest { get; set; }
-    public bool Return { get; set; }
+    public string Return { get; set; }
 }
