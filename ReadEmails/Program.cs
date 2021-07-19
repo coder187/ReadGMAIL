@@ -29,14 +29,22 @@ namespace ReadEmails
         static string ApplicationName = "Gmail API .NET Read Form Enquiry Data";
         static void Main(string[] args)
         {
+
+            ReadEmail_Settings RunSettings = GetSettings();
+
             UserCredential credential;
-            
+
             using (var stream =
                 new FileStream("credentials.json", FileMode.Open, FileAccess.Read))
             {
                 // The file token.json stores the user's access and refresh tokens, and is created
                 // automatically when the authorization flow completes for the first time.
-                string credPath = "token.json";
+                string credPath = RunSettings.CredentialPath;
+                if (RunSettings.ClearAccessToken)
+                {
+                    Directory.Delete(credPath,true);
+                }
+
                 credential = GoogleWebAuthorizationBroker.AuthorizeAsync(
                     GoogleClientSecrets.Load(stream).Secrets,
                     Scopes,
@@ -53,48 +61,7 @@ namespace ReadEmails
                 ApplicationName = ApplicationName,
             });
 
-            //SAMPLE CODE
-            // Define parameters of request.
-            //UsersResource.LabelsResource.ListRequest request = service.Users.Labels.List("me");
-            //UsersResource.MessagesResource.ListRequest request2 = service.Users.Messages.List("me");
-
-            //// List labels.
-            //IList<Label> labels = request.Execute().Labels;
-            //Console.WriteLine("Labels:");
-            //if (labels != null && labels.Count > 0)
-            //{
-            //    foreach (var labelItem in labels)
-            //    {
-            //        Console.WriteLine("{0}", labelItem.Name);
-            //    }
-            //}
-            //else
-            //{
-            //    Console.WriteLine("No labels found.");
-            //}
-            ////Console.Read();
-
-            //// List emails.
-            //IList<Message> emails = request2.Execute().;
-            //long emailSizeEst = (long)request2.Execute().ResultSizeEstimate;
-
-            //Console.WriteLine("Emails:");
-            //Console.WriteLine("Email Size:" + emailSizeEst);
-
-            //if (emails != null && emails.Count > 0)
-            //{
-            //    foreach (var emailItem in emails)
-            //    {
-            //        Console.WriteLine("{0}", emailItem.Id);
-            //    }
-            //}
-            //else
-            //{
-            //    Console.WriteLine("No emails found.");
-            //}
             
-
-            long pageCount = 0;
             List<Message> result = new List<Message>();
             UsersResource.MessagesResource.ListRequest request = service.Users.Messages.List("me");
 
@@ -102,10 +69,9 @@ namespace ReadEmails
             Profile profile_response = profile_request.Execute();
             string acc = profile_response.EmailAddress;
             
-
-            request.IncludeSpamTrash = false;
+            request.IncludeSpamTrash = RunSettings.IncSpamTrash;
             request.LabelIds= "INBOX";
-            request.MaxResults = 10;
+            request.MaxResults = RunSettings.NoOfEmailsToRead;
             string query = "";
             string query_from = ""; //use to filter for an address
             query = "label:unread";
@@ -182,8 +148,10 @@ namespace ReadEmails
                 }
             }
 
+            int i = 1;
             foreach (Enquiry e in Enquiries){
-                WriteEnquiry(e);
+                WriteEnquiry(e,i);
+                i++;
             }
             Console.Read();
 
@@ -199,11 +167,7 @@ namespace ReadEmails
                     return Convert.FromBase64String(thisresult.ToString());
                 }
                 
-            string Base64UrlEncode(string input)
-            {
-                var inputBytes = System.Text.Encoding.UTF8.GetBytes(input);
-                return Convert.ToBase64String(inputBytes).Replace("+", "-").Replace("/", "_").Replace("=", "");
-            }
+           
 
             Enquiry ReadEnquiry(string s, string account)
             {
@@ -297,8 +261,11 @@ namespace ReadEmails
                 return e;
             }
                
-            void WriteEnquiry(Enquiry e) {
-                Console.WriteLine("//////////////////////////////////////////////////");
+            void WriteEnquiry(Enquiry e, int ii) {
+                Console.ForegroundColor = ConsoleColor.Magenta;
+                Console.Write(ii);
+                Console.ForegroundColor = ConsoleColor.Gray;
+                Console.WriteLine("////////////////////////////////////////////////");
                 Console.WriteLine(e.Acc);
                 Console.WriteLine(e.Source);
                 Console.WriteLine(e.Name);
@@ -310,6 +277,18 @@ namespace ReadEmails
                 Console.WriteLine(e.PickDate);
                 Console.WriteLine(e.Return);
                 Console.WriteLine("//////////////////////////////////////////////////");
+            }
+
+            ReadEmail_Settings GetSettings() {
+                ReadEmail_Settings sett = new ReadEmail_Settings();
+                sett.CredentialPath = "token.json";
+                sett.ClearAccessToken = false;
+                sett.IncSpamTrash = false;
+                sett.NoOfEmailsToRead = 10;
+                sett.UnReadOnly = true;
+                sett.Filter_From = "";
+                sett.Filter_Text = "";
+                return sett;
             }
         }
     }
@@ -327,6 +306,14 @@ class Enquiry
     public string Return { get; set; }
     public string Source { get; set; }
     public string Acc { get; set; }
+}
 
-
+class ReadEmail_Settings {
+    public string CredentialPath { get; set; }
+    public bool ClearAccessToken { get; set; }
+    public int NoOfEmailsToRead { get; set; }
+    public bool IncSpamTrash { get; set; }
+    public bool UnReadOnly { get; set; }
+    public string Filter_From { get; set; }
+    public string Filter_Text { get; set; }
 }
