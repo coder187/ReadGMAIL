@@ -97,6 +97,12 @@ namespace ReadEmails
             long pageCount = 0;
             List<Message> result = new List<Message>();
             UsersResource.MessagesResource.ListRequest request = service.Users.Messages.List("me");
+
+            UsersResource.GetProfileRequest profile_request = service.Users.GetProfile("me");
+            Profile profile_response = profile_request.Execute();
+            string acc = profile_response.EmailAddress;
+            
+
             request.IncludeSpamTrash = false;
             request.LabelIds= "INBOX";
             request.MaxResults = 10;
@@ -166,7 +172,7 @@ namespace ReadEmails
                             
                         }
                         //Console.WriteLine(decodedString);
-                        Enquiry ThisEmailEnquiry = ReadEnquiry(decodedString);
+                        Enquiry ThisEmailEnquiry = ReadEnquiry(decodedString,acc);
                         Enquiries.Add(ThisEmailEnquiry);
                     }
 
@@ -196,10 +202,14 @@ namespace ReadEmails
                 return Convert.ToBase64String(inputBytes).Replace("+", "-").Replace("/", "_").Replace("=", "");
             }
 
-            Enquiry ReadEnquiry(string s)
+            Enquiry ReadEnquiry(string s, string account)
             {
+                //myhead a bit messes up - cant think of an easier way to do this.
+                //1. remove unneeded text before and after body of enquriy
+                //2. convert to array - one element per enq item
+                //3. for ea array element - split on ":"
+                //4. CASE statement Name:Vlaue and create a new Enquiry obejct.
 
-                
                 //substring between ie and Map
                 int pFrom = s.IndexOf(".ie") + ".ie".Length;
                 int pTo = s.LastIndexOf("Map");
@@ -212,7 +222,8 @@ namespace ReadEmails
 
                 //Parse string to Enquiry Object
                 Enquiry e = new Enquiry();
-
+                e.Acc = account;
+                e.Source = "FASTBUS/QUICKBUS";
                 foreach (var EnquiryItem in EnquiryItems)
                 {
                    
@@ -251,6 +262,8 @@ namespace ReadEmails
                
             void WriteEnquiry(Enquiry e) {
                 Console.WriteLine("//////////////////////////////////////////////////");
+                Console.WriteLine(e.Acc);
+                Console.WriteLine(e.Source);
                 Console.WriteLine(e.Name);
                 Console.WriteLine(e.Phone);
                 Console.WriteLine(e.Email);
@@ -275,4 +288,8 @@ class Enquiry
     public string PickDate { get; set; }
     public string Dest { get; set; }
     public string Return { get; set; }
+    public string Source { get; set; }
+    public string Acc { get; set; }
+
+
 }
