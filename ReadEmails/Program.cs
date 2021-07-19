@@ -54,6 +54,8 @@ namespace ReadEmails
 
             // Define parameters of request.
             UsersResource.LabelsResource.ListRequest request = service.Users.Labels.List("me");
+            UsersResource.MessagesResource.ListRequest request2 = service.Users.Messages.List("me");
+
 
             // List labels.
             IList<Label> labels = request.Execute().Labels;
@@ -68,6 +70,22 @@ namespace ReadEmails
             else
             {
                 Console.WriteLine("No labels found.");
+            }
+            Console.Read();
+
+            // List emails.
+            IList<Message> emails = request2.Execute().Messages;
+            Console.WriteLine("Messages:");
+            if (emails != null && emails.Count > 0)
+            {
+                foreach (var messageItem in emails)
+                {
+                    Console.WriteLine("{0}", messageItem.Id);
+                }
+            }
+            else
+            {
+                Console.WriteLine("No messages found.");
             }
             Console.Read();
 
