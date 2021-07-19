@@ -17,7 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
-using System.Text;
+using System.Globalization;
 
 namespace ReadEmails
 {
@@ -107,8 +107,11 @@ namespace ReadEmails
             request.LabelIds= "INBOX";
             request.MaxResults = 10;
             string query = "";
+            string query_from = ""; //use to filter for an address
             query = "label:unread";
             query = query + " " + "subject:({quickbus.ie fastbus.ie})";
+            query = query + " " + query_from;
+
 
             request.Q = query;
             List<Enquiry> Enquiries = new List<Enquiry>();
@@ -224,6 +227,10 @@ namespace ReadEmails
                 Enquiry e = new Enquiry();
                 e.Acc = account;
                 e.Source = "FASTBUS/QUICKBUS";
+
+                string myDate = "1/1/1900";
+                string myTime = "1/1/1900";
+
                 foreach (var EnquiryItem in EnquiryItems)
                 {
                    
@@ -253,10 +260,40 @@ namespace ReadEmails
                             e.Return = NameValues[1].Trim();
                             break;
                         case "Pick-up Date":
-                            e.PickDate = NameValues[1].Trim();
+                            myDate = NameValues[1].TrimStart();
+                            break;
+                        case "Pick-up Time":
+                            myTime = NameValues[1].Trim();
+                            break;
+                        case "Pickup Date/Time":
+                            //string format=  Pickup Date/Time: dd/mm/yy hh:mm
+                            //NameValues[0] = field name 
+                            //NameValues[1] = date plus hour part 
+                            //NameValues[2] = minute part
+                            //remove leading space, split on whitespsace to get datepart & hourpart, concat hourpart with minutes
+                            // 
+                            myDate = NameValues[1].TrimStart();
+                            string[] dateparts = NameValues[1].TrimStart().Split((char)32);
+                            myDate = dateparts[0];
+                            myTime = dateparts[1] + ":" + NameValues[2];
                             break;
                     }
                 }
+                
+                //getting errors from DateTime.Parse depending on enquiry source so I'm using
+                //TryParse which seems to work.
+                if (myDate != "1/1/1900") {
+                    DateTime thisDate;
+                    if (!(DateTime.TryParse(myDate.ToString(), out thisDate)))
+                        thisDate = DateTime.Parse(myDate.ToString(), new CultureInfo("ie"));
+                 
+                    e.PickDate = thisDate;
+                }
+                if (myTime != "1/1/1900")
+                {
+                    e.PickDate = e.PickDate.Add(TimeSpan.Parse(myTime));
+                }
+
                 return e;
             }
                
@@ -285,7 +322,7 @@ class Enquiry
     public string Phone { get; set; }
     public string Bus { get; set; }
     public string Pickup { get; set; }
-    public string PickDate { get; set; }
+    public DateTime PickDate { get; set; }
     public string Dest { get; set; }
     public string Return { get; set; }
     public string Source { get; set; }
