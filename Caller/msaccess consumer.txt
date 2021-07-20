@@ -22,3 +22,26 @@ Dim MyEnquiry As Enquiry
     Debug.Print MyEnquiry.Name & " - " & MyEnquiry.Phone & " - " & MyEnquiry.Email
   Next
 End Sub
+
+Sub ReadSomeEmail3()
+Debug.Print "Start"
+Debug.Print Now()
+
+
+Dim mp As Pragma
+Set mp = New Pragma
+
+mp.Bigstring = "param one"
+mp.SmallString = "param two"
+
+Dim myobj As TestClass
+Set myobj = New TestClass
+
+myobj.BuildList mp
+
+Dim MyEnquiry As Enquiry
+  For Each MyEnquiry In myobj
+    Debug.Print MyEnquiry.Name & " - " & MyEnquiry.Phone & " - " & MyEnquiry.Email & " - " & MyEnquiry.Acc
+  Next
+Debug.Print "done"
+End Sub

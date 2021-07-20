@@ -44,41 +44,62 @@ namespace ReadEmail_DLL
         public string Filter_From { get; set; }
         public string Filter_Text { get; set; }
     }
+    public class Pragma
+    {
+        public string BigString { get; set; }
+        public string SmallString { get; set; }
 
+    }
     //interface to allow vba read IEnumerable
     //https://limbioliong.wordpress.com/2011/10/28/exposing-an-enumerator-from-managed-code-to-com/
-    public interface IEnumerableClass : IEnumerable
+
+    public interface TestIEnumerableClass : IEnumerable
     {
         new IEnumerator GetEnumerator();
+        void BuildList(Pragma p);
     }
 
     //test class for VBA interop
     [ClassInterface(ClassInterfaceType.None)]
-    public class MyEnumerableClass : IEnumerableClass
+    public class TestClass : TestIEnumerableClass
+    {
+       
+        private List<Enquiry> enquiry_list = new List<Enquiry>();
+        public void MainProgram(Pragma p)
+        {
+            
+            enquiry_list.Add(new Enquiry { Name = "Galileo Galilei", Email = "n/a", Phone = "n/a", Acc = p.BigString });
+            enquiry_list.Add(new Enquiry { Name = "Patrick Moore", Email = "pmoore@baa.co.uk", Phone = "00449881234", Acc = p.BigString });
+            enquiry_list.Add(new Enquiry { Name = "Carl Sagan", Email = "carl@uh.com", Phone = "19883456", Acc = p.BigString });
     
+        }
+
+        public void BuildList(Pragma p) { MainProgram(p); }
+
+        public IEnumerator GetEnumerator()
+        {
+            return enquiry_list.GetEnumerator();
+        }
+    }
+    public interface IEnumerableClass : IEnumerable
+    {
+        new IEnumerator GetEnumerator();
+    }
+    //test class for VBA interop
+    [ClassInterface(ClassInterfaceType.None)]
+    public class MyEnumerableClass : IEnumerableClass
     {
         public IEnumerator GetEnumerator()
         {
-            //List<string> name_list = new List<string>();
-
-            //name_list.Add("John Lennon");
-            //name_list.Add("Paul McCartney");
-            //name_list.Add("George Harrison");
-            //name_list.Add("Ringo Starr");
-            //return name_list.GetEnumerator();
-
             List<Enquiry> enquiry_list = new List<Enquiry>();
-            enquiry_list.Add(new Enquiry { Name = "Galileo Galilei", Email = "n/a", Phone = "n/a" });
-            enquiry_list.Add(new Enquiry { Name = "Patrick Moore", Email = "pmoore@baa.co.uk", Phone = "00449881234" });
-            enquiry_list.Add(new Enquiry { Name = "Carl Sagan", Email = "carl@uh.com", Phone = "19883456" });
+            enquiry_list.Add(new Enquiry { Name = "Galileo Galilei", Email = "n/a", Phone = "n/a", Acc = GetS() });
+            enquiry_list.Add(new Enquiry { Name = "Patrick Moore", Email = "pmoore@baa.co.uk", Phone = "00449881234", Acc= "p.CredentialPath" });
+            enquiry_list.Add(new Enquiry { Name = "Carl Sagan", Email = "carl@uh.com", Phone = "19883456", Acc = "p.CredentialPath" });
             
             return enquiry_list.GetEnumerator();
         }
-
     }
-    public class ReadEmail 
-    {
-        
+    public class ReadEmail { 
 
         static byte[] FromBase64ForUrlString(string base64ForUrlInput)
         {
@@ -191,7 +212,9 @@ namespace ReadEmail_DLL
 
        
         [DispId(-4)]
-        public List<Enquiry> ReadEmails(ProgramSettings PS) {
+        public List<Enquiry> ReadEmails(ProgramSettings PS) 
+        //public Enquiry[] ReadEmails(ProgramSettings PS)
+        {
             // If modifying these scopes, delete your previously saved credentials
             // at ~/.credentials/gmail-dotnet-quickstart.json
             string[] Scopes = { GmailService.Scope.GmailReadonly };
@@ -245,6 +268,8 @@ namespace ReadEmail_DLL
             ListMessagesResponse response = request.Execute();
 
             List<Enquiry> Enquiries = new List<Enquiry>();
+            //Enquiry[] Enquiries = new Enquiry[10];
+            int i = 0;
             if (response != null && response.Messages != null)
             {
                 foreach (Message m in response.Messages)
@@ -294,12 +319,16 @@ namespace ReadEmail_DLL
                             }
                         }
                         //Console.WriteLine(decodedString);
+                        
                         Enquiry ThisEmailEnquiry = ReadEnquiry(decodedString, acc);
+                        //i++;
+                        //Enquiries[i] = ThisEmailEnquiry;
                         Enquiries.Add(ThisEmailEnquiry);
                     }
 
                 }
             }
+            
             return Enquiries;
         }
     }
