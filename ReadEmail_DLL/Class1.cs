@@ -15,10 +15,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Globalization;
+using System.Runtime.InteropServices;
+using System.Collections;
 
 namespace ReadEmail_DLL
 {
-
     public class Enquiry
     {
         public string Name { get; set; }
@@ -43,7 +44,39 @@ namespace ReadEmail_DLL
         public string Filter_From { get; set; }
         public string Filter_Text { get; set; }
     }
-    public class ReadEmail
+
+    //interface to allow vba read IEnumerable
+    //https://limbioliong.wordpress.com/2011/10/28/exposing-an-enumerator-from-managed-code-to-com/
+    public interface IEnumerableClass : IEnumerable
+    {
+        new IEnumerator GetEnumerator();
+    }
+
+    //test class for VBA interop
+    [ClassInterface(ClassInterfaceType.None)]
+    public class MyEnumerableClass : IEnumerableClass
+    
+    {
+        public IEnumerator GetEnumerator()
+        {
+            //List<string> name_list = new List<string>();
+
+            //name_list.Add("John Lennon");
+            //name_list.Add("Paul McCartney");
+            //name_list.Add("George Harrison");
+            //name_list.Add("Ringo Starr");
+            //return name_list.GetEnumerator();
+
+            List<Enquiry> enquiry_list = new List<Enquiry>();
+            enquiry_list.Add(new Enquiry { Name = "Galileo Galilei", Email = "n/a", Phone = "n/a" });
+            enquiry_list.Add(new Enquiry { Name = "Patrick Moore", Email = "pmoore@baa.co.uk", Phone = "00449881234" });
+            enquiry_list.Add(new Enquiry { Name = "Carl Sagan", Email = "carl@uh.com", Phone = "19883456" });
+            
+            return enquiry_list.GetEnumerator();
+        }
+
+    }
+    public class ReadEmail 
     {
         
 
@@ -151,8 +184,13 @@ namespace ReadEmail_DLL
             return e;
         }
 
+        //test for com interop
+        public int AddTwoNums(int one, int two) {
+            return one + two;
+        }
 
        
+        [DispId(-4)]
         public List<Enquiry> ReadEmails(ProgramSettings PS) {
             // If modifying these scopes, delete your previously saved credentials
             // at ~/.credentials/gmail-dotnet-quickstart.json

@@ -1,0 +1,24 @@
+﻿note :
+set assembly
+for com interop
+compile for x64 for msaccess 64
+This returns an IEnumerable object of type enquirt from .net dll to vba
+
+https://limbioliong.wordpress.com/2011/10/28/exposing-an-enumerator-from-managed-code-to-com/
+https://www.geeksengine.com/article/create-dll.html
+https://www.c-sharpcorner.com/UploadFile/1e050f/creating-and-using-dll-class-library-in-C-Sharp/
+
+Option Compare Database
+Option Explicit
+Sub GetAstronomers()
+
+Dim myobj As MyEnumerableClass
+Set myobj = New MyEnumerableClass
+
+Dim MyEnquiry As Enquiry
+  For Each MyEnquiry In myobj
+    
+
+    Debug.Print MyEnquiry.Name & " - " & MyEnquiry.Phone & " - " & MyEnquiry.Email
+  Next
+End Sub
