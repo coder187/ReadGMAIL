@@ -32,7 +32,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="ReadEmail_DLL">
+    <Reference Include="ReadEmail_DLL, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\ReadEmail_DLL\bin\Debug\ReadEmail_DLL.dll</HintPath>
     </Reference>
     <Reference Include="System" />

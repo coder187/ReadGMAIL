@@ -92,12 +92,18 @@ namespace ReadEmail_DLL
         public IEnumerator GetEnumerator()
         {
             List<Enquiry> enquiry_list = new List<Enquiry>();
-            enquiry_list.Add(new Enquiry { Name = "Galileo Galilei", Email = "n/a", Phone = "n/a", Acc = GetS() });
+            enquiry_list.Add(new Enquiry { Name = "Galileo Galilei", Email = "n/a", Phone = "n/a", Acc = "GetS()" });
             enquiry_list.Add(new Enquiry { Name = "Patrick Moore", Email = "pmoore@baa.co.uk", Phone = "00449881234", Acc= "p.CredentialPath" });
             enquiry_list.Add(new Enquiry { Name = "Carl Sagan", Email = "carl@uh.com", Phone = "19883456", Acc = "p.CredentialPath" });
             
             return enquiry_list.GetEnumerator();
         }
+    }
+
+    public interface IEnumerable_ReadEmailClass : IEnumerable
+    {
+        new IEnumerator GetEnumerator();
+        void ReadEmails(ProgramSettings PS);
     }
     public class ReadEmail { 
 
@@ -205,15 +211,32 @@ namespace ReadEmail_DLL
             return e;
         }
 
-        //test for com interop
-        public int AddTwoNums(int one, int two) {
-            return one + two;
+        public void MoveTokenFile() {
+            
+            foreach (string newPath in Directory.GetFiles("token", "*.json*", SearchOption.TopDirectoryOnly))
+            {
+                File.Copy(newPath, "C:\\Projects\\ReadEmails\\ReadEmails_Caller\\bin\\Debug\\token.json", true);
+            }
         }
 
-       
-        [DispId(-4)]
-        public List<Enquiry> ReadEmails(ProgramSettings PS) 
-        //public Enquiry[] ReadEmails(ProgramSettings PS)
+        //[DispId(-4)]
+        //gets popuated by ReadEmails
+        //to get this to work for com interop with access vba 
+        //I have created the ListofEnquiries collection outside the main(ReadEmails) method.
+        //I can now use GetEnumerator to return a collection of Enquiry objects that vba can loop over.
+        public List<Enquiry> ListofEnquiries;
+
+        public IEnumerator GetEnumerator()
+        {
+            return ListofEnquiries.GetEnumerator();
+        }
+        // the vba caller will 
+        // 1. create a new instanse of ProgramSettings and populate accordingly
+        // 2. call the ReadEmails method and populate the collection
+        // 3. use a for each loop to iterate over the collection
+
+        //public List<Enquiry> ReadEmails(ProgramSettings PS)
+        public void ReadEmails(ProgramSettings PS)
         {
             // If modifying these scopes, delete your previously saved credentials
             // at ~/.credentials/gmail-dotnet-quickstart.json
@@ -227,7 +250,9 @@ namespace ReadEmail_DLL
             {
                 // The file token.json stores the user's access and refresh tokens, and is created
                 // automatically when the authorization flow completes for the first time.
+                //string credPath = PS.CredentialPath;
                 string credPath = PS.CredentialPath;
+
                 if (PS.ClearAccessToken & Directory.Exists(credPath))
                 {
                     Directory.Delete(credPath, true);
@@ -240,6 +265,7 @@ namespace ReadEmail_DLL
                     CancellationToken.None,
                     new FileDataStore(credPath, true)).Result;
                 Console.WriteLine("Credential file saved to: " + credPath);
+                ;
             }
             // Create Gmail API service.
             var service = new GmailService(new BaseClientService.Initializer()
@@ -268,8 +294,7 @@ namespace ReadEmail_DLL
             ListMessagesResponse response = request.Execute();
 
             List<Enquiry> Enquiries = new List<Enquiry>();
-            //Enquiry[] Enquiries = new Enquiry[10];
-            int i = 0;
+   
             if (response != null && response.Messages != null)
             {
                 foreach (Message m in response.Messages)
@@ -321,15 +346,13 @@ namespace ReadEmail_DLL
                         //Console.WriteLine(decodedString);
                         
                         Enquiry ThisEmailEnquiry = ReadEnquiry(decodedString, acc);
-                        //i++;
-                        //Enquiries[i] = ThisEmailEnquiry;
                         Enquiries.Add(ThisEmailEnquiry);
                     }
 
                 }
             }
-            
-            return Enquiries;
+            //return Enquiries;
+            ListofEnquiries = Enquiries;
         }
     }
 }
