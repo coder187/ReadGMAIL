@@ -45,3 +45,34 @@ Dim MyEnquiry As Enquiry
   Next
 Debug.Print "done"
 End Sub
+
+
+
+Sub ReadSomeEmail4()
+Debug.Print "Start"
+Debug.Print "*" & Now()
+
+Dim ps As ProgramSettings 'Enquiry Object from ReadEmail_dll
+Set ps = New ProgramSettings
+
+ps.ClearAccessToken = False
+ps.CredentialPath = "token.json"
+ps.IncSpamTrash = False
+ps.UnReadOnly = True
+ps.NoOfEmailsToRead = 20
+
+Dim ReadEmailObj As ReadEmail
+Set ReadEmailObj = New ReadEmail
+
+'call to Google Service
+ReadEmailObj.ReadEmails ps
+    
+Dim i As Integer
+i = 1
+Dim MyEnquiry As Enquiry 'Enquiry Object from ReadEmail_dll
+  For Each MyEnquiry In ReadEmailObj
+    Debug.Print i & "|>" & MyEnquiry.Name & "|" & MyEnquiry.email & "|" & MyEnquiry.phone
+    i = i + 1
+  Next
+Debug.Print "*" & Now & " " & "done"
+End Sub

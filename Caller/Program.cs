@@ -18,16 +18,35 @@ namespace Caller
             MySettings.UnReadOnly = true;
             MySettings.NoOfEmailsToRead = 2;
 
-            
 
-            ReadEmail RE = new ReadEmail();
-            List<Enquiry> Es = RE.ReadEmails(MySettings);
+            //.NET Caller
+            //ReadEmail RE = new ReadEmail();
+            //List<Enquiry> Es = RE.ReadEmails(MySettings);
+            //int i = 1;
+            //foreach (Enquiry e in Es)
+            //{
+            //    WriteEnquiry(e, i);
+            //    i++;
+            //}
+
+            //.COM Interop VBA / VB6 Caller
+            ReadEmail RE;
+            RE = new ReadEmail();
+            RE.ReadEmails(MySettings);
             int i = 1;
-            foreach (Enquiry e in Es)
-            {
-                WriteEnquiry(e, i);
+            foreach (Enquiry e in RE) {
+                WriteEnquiry(e,i);
                 i++;
             }
+            
+            //List<Enquiry> Es = RE.ReadEmails(MySettings);
+            //int i = 1;
+            //foreach (Enquiry e in Es)
+            //{
+            //    WriteEnquiry(e, i);
+            //    i++;
+            //}
+
 
             Console.Read();
 
