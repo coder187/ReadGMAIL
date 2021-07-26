@@ -12,11 +12,11 @@ namespace Caller
         static void Main(string[] args)
         {
             ProgramSettings MySettings = new ProgramSettings();
-            MySettings.ClearAccessToken = true;
+            MySettings.ClearAccessToken = false;
             MySettings.CredentialPath = "token.json";
             MySettings.IncSpamTrash = false;
             MySettings.UnReadOnly = true;
-            MySettings.NoOfEmailsToRead = 2;
+            MySettings.NoOfEmailsToRead = 3;
 
 
             //.NET Caller
@@ -64,7 +64,7 @@ namespace Caller
                 Console.WriteLine(e.Bus);
                 Console.WriteLine(e.Pickup);
                 Console.WriteLine(e.Dest);
-                Console.WriteLine(e.PickDate);
+                Console.WriteLine(e.PickDate.ToString("dd/MM/yyyy"));
                 Console.WriteLine(e.Return);
                 Console.WriteLine("//////////////////////////////////////////////////");
             }

@@ -31,6 +31,7 @@ namespace ReadEmail_DLL
         public string Dest { get; set; }
         public string Return { get; set; }
         public string Source { get; set; }
+        public string EnquiryDateFormat { get; set; }
         public string Acc { get; set; }
     }
 
@@ -126,6 +127,33 @@ namespace ReadEmail_DLL
             //3. for ea array element - split on ":"
             //4. CASE statement Name:Vlaue and create a new Enquiry obejct.
 
+
+            //Parse string to Enquiry Object
+            Enquiry e = new Enquiry();
+            
+            if (s.Contains("QuickBus.ie"))
+            {
+                e.Source = "QuickBus";
+                e.EnquiryDateFormat = "dd/MM/yyyy";
+            }
+            else if (s.Contains("Fastbus.ie"))
+            {
+                e.Source = "FastBus";
+                e.EnquiryDateFormat = "MM/dd/yyyy";
+            }
+            else if (s.Contains("LocalLink"))
+            {
+                e.Source = "LocalLink";
+                e.EnquiryDateFormat = "dd/MM/yyyy";
+            }
+            else
+            {
+                e.Source = "Unknown";
+                e.EnquiryDateFormat = "dd/MM/yyyy";
+            }
+
+            e.Acc = account;
+
             //substring between ie and Map
             int pFrom = s.IndexOf(".ie") + ".ie".Length;
             int pTo = s.LastIndexOf("Map");
@@ -136,11 +164,6 @@ namespace ReadEmail_DLL
             string[] stringSeparators = new string[] { "\r\n" };
             string[] EnquiryItems = s.Split(stringSeparators, StringSplitOptions.None); //each line as an element in the array "Name: Jean-Luc Picard"
 
-            //Parse string to Enquiry Object
-            Enquiry e = new Enquiry();
-            e.Acc = account;
-            e.Source = "FASTBUS/QUICKBUS";
-
             string myDate = "1/1/1900";
             string myTime = "1/1/1900";
 
@@ -148,7 +171,7 @@ namespace ReadEmail_DLL
             {
 
                 string[] NameValues = EnquiryItem.Split(':');
-
+                //foreach (string nv in NameValues) { Console.Write(nv); }
                 switch (NameValues[0])
                 {
                     case "Name":
@@ -166,7 +189,7 @@ namespace ReadEmail_DLL
                     case "Pickup":
                         e.Pickup = NameValues[1].Trim();
                         break;
-                    case "Drop Off":
+                    case "Drop off":
                         e.Dest = NameValues[1].Trim();
                         break;
                     case "Return Trip":
@@ -191,21 +214,33 @@ namespace ReadEmail_DLL
                         myTime = dateparts[1] + ":" + NameValues[2];
                         break;
                 }
-            }
+            }         
 
-            //getting errors from DateTime.Parse depending on enquiry source so I'm using
-            //TryParse which seems to work.
             if (myDate != "1/1/1900")
             {
                 DateTime thisDate;
-                if (!(DateTime.TryParse(myDate.ToString(), out thisDate)))
-                    thisDate = DateTime.Parse(myDate.ToString(), new CultureInfo("ie"));
 
+      
+                if (e.EnquiryDateFormat == "dd/MM/yyyy") {
+                    thisDate = DateTime.Parse(myDate.ToString());
+                }
+                else {
+                    if (!(DateTime.TryParseExact(myDate, e.EnquiryDateFormat, CultureInfo.InvariantCulture,
+                          DateTimeStyles.None, out thisDate)))
+                    {
+                        thisDate = DateTime.Parse(myDate.ToString()); 
+                    }
+                }
                 e.PickDate = thisDate;
             }
             if (myTime != "1/1/1900")
             {
-                e.PickDate = e.PickDate.Add(TimeSpan.Parse(myTime));
+
+                //DateTime nTime =  DateTime.Parse(myTime + ":00", new CultureInfo("ie"));
+                DateTime t = DateTime.Parse(myTime + ":00", new CultureInfo("ie"));
+                DateTime d = e.PickDate;
+         
+                e.PickDate = new DateTime(d.Year, d.Month, d.Day, t.Hour, t.Minute, t.Second);
             }
 
             return e;

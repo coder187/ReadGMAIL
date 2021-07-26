@@ -190,7 +190,7 @@ namespace ReadEmails
                 int pTo = s.LastIndexOf("Map");
                 s = s.Substring(pFrom, pTo - pFrom).Trim();
 
-                //Console.WriteLine(s);
+                Console.WriteLine(s);
 
                 string[] stringSeparators = new string[] { "\r\n" };
                 string[] EnquiryItems = s.Split(stringSeparators, StringSplitOptions.None); //each line as an element in the array "Name: Jean-Luc Picard"
