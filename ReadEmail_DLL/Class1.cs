@@ -186,10 +186,16 @@ namespace ReadEmail_DLL
                     case "Bus":
                         e.Bus = NameValues[1].Trim();
                         break;
+                    case "Selected Bus":
+                        e.Bus = NameValues[1].Trim();
+                        break;
                     case "Pickup":
                         e.Pickup = NameValues[1].Trim();
                         break;
                     case "Drop off":
+                        e.Dest = NameValues[1].Trim();
+                        break;
+                    case "Destination":
                         e.Dest = NameValues[1].Trim();
                         break;
                     case "Return Trip":
